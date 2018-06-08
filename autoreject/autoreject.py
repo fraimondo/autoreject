@@ -555,7 +555,8 @@ class LocalAutoReject(BaseAutoReject):
             bad_sensor_counts, ch_type=ch_type, picks=this_picks)
 
         reject_log = RejectLog(labels=labels, bad_epochs=bad_epochs,
-                               ch_names=epochs.ch_names)
+                               ch_names=epochs.ch_names,
+                               bad_sensor_counts=bad_sensor_counts)
         return reject_log
 
     def fit(self, epochs):
@@ -902,7 +903,8 @@ class LocalAutoRejectCV(object):
         reject_log = RejectLog(
             labels=labels,
             bad_epochs=np.zeros(len(epochs), dtype=np.bool),
-            ch_names=ch_names)
+            ch_names=ch_names,
+            bad_sensor_counts=np.zeros(len(epochs), dtype=np.int))
 
         picks_by_type = _get_picks_by_type(info=epochs.info, picks=self.picks_)
         for ch_type, this_picks in picks_by_type:
@@ -913,6 +915,7 @@ class LocalAutoRejectCV(object):
             reject_log.bad_epochs = np.logical_or(
                 reject_log.bad_epochs, this_reject_log.bad_epochs)
             reject_log.ch_names = this_reject_log.ch_names
+            reject_log.bad_sensor_counts += this_reject_log.bad_sensor_counts
         return reject_log
 
     def transform(self, epochs, return_log=False):
@@ -1041,12 +1044,14 @@ class RejectLog(object):
         The list of channels corresponding to the rows of the labels.
     """
 
-    def __init__(self, bad_epochs, labels, ch_names):
+    def __init__(self, bad_epochs, labels, ch_names, bad_sensor_counts):
         self.bad_epochs = bad_epochs
         self.labels = labels
         self.ch_names = ch_names
+        self.bad_sensor_counts = bad_sensor_counts
         assert len(bad_epochs) == labels.shape[0]
         assert len(ch_names) == labels.shape[1]
+        assert len(bad_epochs) == len(bad_sensor_counts)
 
     def plot(self):
         """Plot."""

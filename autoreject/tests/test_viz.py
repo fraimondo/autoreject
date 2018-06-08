@@ -34,10 +34,13 @@ def test_viz():
     bad_epochs_idx = [0, 1, 3]
     n_epochs, n_channels, _ = epochs.get_data().shape
     bad_epochs = np.zeros(n_epochs, dtype=bool)
+    bad_sensor_counts = np.zeros(n_epochs, dtype=np.int)
     bad_epochs[bad_epochs_idx] = True
+    bad_sensor_counts[bad_epochs_idx] = [1, 2, 1]
 
     labels = np.zeros((n_epochs, n_channels))
-    reject_log = autoreject.RejectLog(bad_epochs, labels, epochs.ch_names)
+    reject_log = autoreject.RejectLog(
+        bad_epochs, labels, epochs.ch_names, bad_sensor_counts)
     reject_log.plot_epochs(epochs)
     assert_raises(ValueError, reject_log.plot_epochs, epochs[:2])
     plt.close('all')
